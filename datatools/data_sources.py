@@ -3,13 +3,24 @@ from abc import ABC, abstractmethod
 import datatools.etl
 import requests
 import json
-import utils
+import datatools.utils
 
 
 class DataSource(ABC):
+    """
+    Abstract class for ETL processes.
+    """
+    def __init__(self):
+        self.imported_data: pd.DataFrame = pd.DataFrame()
+        self.transformed_data: pd.DataFrame = pd.DataFrame()
+        self.exported_data: pd.DataFrame = pd.DataFrame()
+
     @abstractmethod
     def import_data(self, *args, **kwargs) -> None:
         pass
+
+    def transform_data(self, transformer: datatools.transformers.Transformer) -> None:
+        self.transformed_data = transformer.transform(self.imported_data)
 
     @abstractmethod
     def export_data(self, *args, **kwargs) -> pd.DataFrame:
@@ -18,13 +29,14 @@ class DataSource(ABC):
 
 class DataframeSource(DataSource):
     def __init__(self):
-        self.df = None
+        super().__init__()
 
     def import_data(self, df) -> None:
-        self.df = df
+        self.imported_data = df
 
     def export_data(self) -> pd.DataFrame:
-        return self.df
+        self.exported_data = self.transformed_data if self.transformed_data is not None else self.imported_data
+        return self.exported_data
 
 
 class APISource(DataSource):  # Probably need to create a bridge class.

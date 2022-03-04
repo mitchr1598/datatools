@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-import datatools.data_sources
-import datatools.uploaders
-from typing import Union, Callable
-import functools
-import datatools.transformers
+import datatools.uploading.uploaders
+from typing import Union
+import datatools.transforming
 
 
 class ETLBase(ABC):
@@ -26,7 +24,7 @@ class ETLBase(ABC):
         pass
 
     @abstractmethod
-    def load_data(self, uploader: datatools.uploaders.Uploader) -> None:
+    def load_data(self, uploader: datatools.uploading.uploaders.Uploader) -> None:
         pass
 
 
@@ -48,7 +46,7 @@ class ETLGeneric(ETLBase):
     def transform_data(self, transformer: datatools.transformers.Transformer, args: tuple = None) -> None:
         self.transformed_data = transformer.transform(self.extracted_data)
 
-    def load_data(self, uploader: datatools.uploaders.Uploader) -> None:
+    def load_data(self, uploader: datatools.uploading.uploaders.Uploader) -> None:
         uploader.upload_data(self.transformed_data)
         self.successful_uploads = uploader.get_successful_uploads()
         self.failed_uploads = uploader.get_failed_uploads()
