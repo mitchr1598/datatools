@@ -1,6 +1,7 @@
 import pandas as pd
 from pandas.api.types import is_float
 from typing import Union
+import datatools.utils as utils
 
 
 def remove_top_n(df, n: int):
@@ -190,21 +191,26 @@ def drop_duplicate_columns(df, subset: list[Union[int, str]]):
     Drops columns with duplicate names, keeping the first instance
     :param subset: The subset of columns to consider, optionally set using index or column name
     """
-    dupe_cols = ~df.columns.duplicated()
-
-    if isinstance(subset[0], int):
-        # Subset of columns specified by index
-        subset = set(subset)  # convert to set for easier containing checking
-        dupe_cols = [col if e in subset else True for i, col in
-                     enumerate(dupe_cols)]  # list comp wrapper to filter for subset
-    else:
-        # Subset of columns specified by name
-        subset = set(subset)  # convert to set for easier containing checking
-        dupe_cols = [is_dupe if col_name in subset else True for col_name, is_dupe in zip(df.columns, dupe_cols)]
-
-    df = df.loc[:, dupe_cols]
-    # df.columns.duplicated() returns a boolean array. If it is False then the column name is unique up to that point, if it is True then the column name is duplicated earlier.
+    keep_cols = ~df.columns.duplicated()
+    # df.columns.duplicated() returns a boolean array. If it is False then the column name is unique up to that point,
+    # if it is True then the column name is duplicated earlier.
     # For example, using ['alpha','beta','alpha'], the returned value would be [False,False,True].
+    # The ~ operator flips the boolean array, so the returned value would be [True,True,False]
+
+    # Now change the keep_cols to only include the subset given
+    if isinstance(subset[0], int):
+        subset = set(subset)  # Converted to set for faster contains check
+        # Flips the boolean value if it's not in the subset (ie. keep it)
+        # Subset of columns specified by index
+        keep_cols = [is_dupe if i in subset else True
+                     for i, is_dupe in enumerate(keep_cols)]  # list comp wrapper to filter for subset
+    else:
+        subset = set(subset)  # Converted to set for faster contains check
+        # Flips the boolean value if it's not in the subset (ie. keep it)
+        # Subset of columns specified by name
+        keep_cols = [is_dupe if col_name in subset else True for col_name, is_dupe in zip(df.columns, keep_cols)]
+
+    df = df.loc[:, keep_cols]
     return df
 
 
@@ -235,13 +241,8 @@ def strip_every_str_column(df, exclude=None):
     """
     df = df.copy()
     df_obj = df.select_dtypes('object').astype(str)
-    str_cols = list_difference(df_obj.columns, exclude) if exclude is not None else df_obj.columns
+    str_cols = utils.list_difference(df_obj.columns, exclude) if exclude is not None else df_obj.columns
     sc = df_obj[str_cols].apply(lambda x: x.str.strip())
-    if len(str_cols) != sc.shape[1]:
-        display(df.head())
-        display(df_obj.head())
-        print(str_cols)
-        display(sc.head())
     df[str_cols] = sc
     return df
 
