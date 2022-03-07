@@ -127,6 +127,15 @@ class CsvSource(DataSource):
         self.exported_data = pd.read_csv(self.path, *args, **kwargs)
 
 
+class ExcelSource(DataSource):
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+
+    def import_data(self, *args, **kwargs) -> None:
+        self.exported_data = pd.read_excel(self.path, *args, **kwargs)
+
+
 class MultiSource:
     def __init__(self):
         self.data_sources = {}
