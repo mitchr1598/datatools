@@ -2,9 +2,9 @@ import pandas as pd
 from abc import ABC, abstractmethod
 import requests
 import json
-import utils
-import uploading
-import transforming
+from datatools import utils
+from datatools import uploading
+from datatools import transforming
 from typing import Union
 
 

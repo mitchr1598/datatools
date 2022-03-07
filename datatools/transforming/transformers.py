@@ -44,7 +44,10 @@ class Transformer:
         self._update_pipeline()
 
     def _update_pipeline(self):
-        self.pipeline = functools.reduce(lambda f, g: lambda x: g(f(x)), self._functions)
+        if not self._functions:  # Checks if empty
+            self.pipeline = lambda x: x
+        else:
+            self.pipeline = functools.reduce(lambda f, g: lambda x: f(g(x)), self._functions)
 
     def transform(self, df):
         return self.pipeline(df)
