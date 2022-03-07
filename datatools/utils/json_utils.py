@@ -38,7 +38,7 @@ def expand_lists(json_array: list, multi_data_att: list = None):
     return json_array
 
 
-def expand_and_normalize(data, column_filter, multi_row_data=None):
+def expand_and_normalize(data: list[dict], column_filter: list[str] = None, multi_row_data: list[str] = None):
     """
     Given a list of json objects, turn the list into a dataframe
     :param data: json_data to turn into a dataframe
@@ -47,13 +47,39 @@ def expand_and_normalize(data, column_filter, multi_row_data=None):
     the sub-array (just give the lowest attribute)
     :return:
     """
+
+    # All steps here are designed to be construct a json array that can successfully be passed into pd.json_normalize
+
     if multi_row_data is None:  # Default value for mutable object
         multi_row_data = []
-    json_keys = {column.split('.')[0] for column in column_filter}  # Get the top level keys
+
+    if column_filter is None:
+        # User hasn't specified what columns to return
+        # Therefore our keys are all the keys that exist in the data
+        json_keys = {key for element in data for key in element.keys()}
+    else:
+        # Get the top level keys
+        json_keys = {column.split('.')[0] for column in column_filter}
+
+    # Filter out the top level keys the user isn't interest in
+    #   - Iterate over each dictionary in list (each object in array -- or -- each 'row' in list))
+    #   - For each key in the previously filtered keys, add the data to the new dictionary, only if the key exists in
+    #   the old one
     filtered_data = [{key: row[key] for key in json_keys if key in row} for row in data]
+
+    # Addresses all list by
+    #   - Creating new dictionaries (rows) for multi_row_data
+    #   - Switching the single element lists to dictionaries
+    #   - Turning the remaining lists into empty dictionaries
     expanding_data = expand_lists(filtered_data, multi_data_att=multi_row_data)
+
+    # Now the data is ready to pass into json_normalize
     normalized_df = pd.json_normalize(expanding_data)
+
+    # Get the user's specified columns that actually exist in the data
     existing_columns = [col for col in column_filter if col in normalized_df.columns]
+
+    # Return with the user's specified columns
     return normalized_df[existing_columns]
 
 
