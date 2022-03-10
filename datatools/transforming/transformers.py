@@ -1,5 +1,5 @@
 from typing import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pandas as pd
 import functools
 
@@ -8,6 +8,7 @@ import functools
 class PipelineStep:
     func: Callable
     args: tuple = tuple()
+    kwargs: dict = field(default_factory=dict)
     """
     A pipeline step is a function that takes only a dataframe returns only a dataframe. Additional arguments can be
     provided at the PipelineStep initialization along with the function provided. This can assist with "customizing'
@@ -15,8 +16,9 @@ class PipelineStep:
     :param func: The function to be called.
     :param args: Additional arguments to be passed to the function.
     """
+
     def __call__(self, df: pd.DataFrame) -> pd.DataFrame:
-        return self.func(df, *self.args)
+        return self.func(df, *self.args, **self.kwargs)
 
 
 class Transformer:

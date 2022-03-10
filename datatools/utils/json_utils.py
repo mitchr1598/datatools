@@ -44,7 +44,7 @@ def expand_and_normalize(data: list[dict], column_filter: list[str] = None, mult
     :param data: json_data to turn into a dataframe
     :param column_filter: The resulting columns you'd like. Separate hierarchical attributes with a '.'
     :param multi_row_data: The attributes that you'd like to create new rows for when there's multiple entries in
-    the sub-array (just give the lowest attribute)
+    the sub-array (just give the lowest attribute in the key hierarchy)
     :return:
     """
 

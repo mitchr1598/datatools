@@ -28,6 +28,6 @@ class CSVUploader(Uploader):
 
     def upload_data(self, df):
         df.to_csv(self.filename, index=False)
-        pd.concat([self._successful_uploads, df], ignore_index=True)
+        self._successful_uploads = pd.concat([self._successful_uploads, df], ignore_index=True)
 
 
