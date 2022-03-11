@@ -13,7 +13,7 @@ class DataSource(ABC):
     Abstract class for importing, transforming, and exporting data from and too various sources processes.
     """
     def __init__(self, transformer: transforming.transformers.Transformer = None,
-                 uploader: uploading.uploaders.Uploader = None):
+                 uploader: uploading.uploaders.Uploader = None, auto_import: bool = True):
         self.imported_data = None
         self.transformed_data: pd.DataFrame = pd.DataFrame()
         self.exported_data: pd.DataFrame = pd.DataFrame()
@@ -175,6 +175,17 @@ class ExcelSource(DataSource):
 
     def import_data(self, *args, **kwargs) -> None:
         self.imported_data = pd.read_excel(self.path, *args, **kwargs)
+
+
+class DatabaseSource(DataSource):
+    def __init__(self, engine, query=''):
+        super().__init__()
+        self.engine = engine
+        self.query = query
+
+    def import_data(self, query='', *args, **kwargs) -> None:
+        self.query += query
+        self.imported_data = pd.read_sql(self.query, self.engine, *args, **kwargs)
 
 
 class MultiSource:  # Maybe this should be a datasource with a concatenation function passed at initialization?
