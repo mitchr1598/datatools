@@ -32,24 +32,18 @@ class Transformer:
 
     def set_functions(self, functions):
         self._functions = functions
-        self._update_pipeline()
 
     def add_function(self, function, index=None):
         if index is None:
             self._functions.append(function)
         else:
             self._functions.insert(index, function)
-        self._update_pipeline()
 
     def remove_function(self, index):
         del self._functions[index]
-        self._update_pipeline()
-
-    def _update_pipeline(self):
-        if not self._functions:  # Checks if empty
-            self.pipeline = lambda x: x
-        else:
-            self.pipeline = functools.reduce(lambda f, g: lambda x: g(f(x)), self._functions)
 
     def transform(self, df):
-        return self.pipeline(df)
+        if not self._functions:  # Checks if empty
+            return df
+        else:
+            return functools.reduce(lambda f, g: lambda x: g(f(x)), self._functions)(df)

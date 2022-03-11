@@ -49,7 +49,7 @@ def search_in_rows(df, search_values: Union[list, set]):
 
 def search_to_promote(df, search_values: Union[list, set], check_header=False):
     """
-    Will search for headers to promote
+    Will search for headers to promote. All search values must be found in the row to be promoted
     """
     required_values = set(search_values)
     if check_header and required_values <= set(df.columns):  # Check if already in header
@@ -58,9 +58,10 @@ def search_to_promote(df, search_values: Union[list, set], check_header=False):
     return df if i is None else promote_nth_row_to_headers(df, i)
 
 
-def search_to_promote_multi(df, search_values_multiple: tuple, check_header=False):
+def search_to_promote_multi(df, search_values_multiple: tuple[list, tuple, set], check_header=False):
     """
-    Will search for headers to promote, with various options to match (will promote the earliest found)
+    Will search for headers to promote, with various options to match (will promote the earliest found).
+    Each element of the tuple search_values_multiple must be a list, tuple, or set of values to search for
     """
     for search_values in search_values_multiple:
         required_values = set(search_values)
