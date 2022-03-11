@@ -242,7 +242,7 @@ def strip_every_str_column(df, exclude=None):
     """
     df = df.copy()
     df_obj = df.select_dtypes('object').astype(str)
-    str_cols = utils.list_difference(df_obj.columns, exclude) if exclude is not None else df_obj.columns
+    str_cols = utils.misc.list_difference(df_obj.columns, exclude) if exclude is not None else df_obj.columns
     sc = df_obj[str_cols].apply(lambda x: x.str.strip())
     df[str_cols] = sc
     return df
