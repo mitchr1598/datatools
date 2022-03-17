@@ -2,6 +2,7 @@ import pandas as pd
 from pandas.api.types import is_float
 from typing import Union
 import datatools.utils as utils
+import warnings
 
 
 def remove_top_n(df, n: int):
@@ -122,12 +123,24 @@ def add_column_if_dne(df, column, name='col'):
     return df
 
 
-def select_columns(df, columns: Union[list, set]):
+def select_columns(df, columns: Union[list, set], on_error='raise'):
     """
     Returns a dataframe containing the defined columns
+    :param df: The dataframe to select columns from
+    :param columns: The columns to select
+    :param on_error: What to do if a column is not found. Options are 'ignore', 'raise', 'warn'
+    :return:
     """
+    if on_error == 'raise':
+        for col in columns:
+            if col not in df.columns:
+                raise ValueError('Column %s not found in dataframe' % col)
+    elif on_error == 'warn':
+        for col in columns:
+            if col not in df.columns:
+                warnings.warn('Column %s not found in dataframe' % col)
     columns = [col for col in columns if col in df.columns]
-    return df if columns == 'all' else df[columns]
+    return df[columns]
 
 
 def rename_nth_column(df, n: int, new_name: str):

@@ -20,7 +20,7 @@ class Uploader(ABC):
 
 class DBUploader(Uploader):
     def __init__(self, db_connection, table_name, if_exists='append'):
-        # Specifying table_name etc. here to adhere to Liskov Substitution Principle
+        # Specifying table_name etc. here to adhere to Liskov Substitution Principle on the use of upload_data method
         super().__init__()
         self._db_connection = db_connection
         self._table_name = table_name
