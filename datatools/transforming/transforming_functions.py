@@ -130,6 +130,14 @@ def select_columns(df, columns: Union[list, set]):
     return df if columns == 'all' else df[columns]
 
 
+def select_columns_range(df, start: int, end: int):
+    """
+    Returns a dataframe containing the defined columns
+    """
+    df = df.iloc[:, start: end]
+    return df
+
+
 def rename_nth_column(df, n: int, new_name: str):
     """"
     Renames the nth column
@@ -212,6 +220,16 @@ def drop_duplicate_columns(df, subset: list[Union[int, str]]):
         keep_cols = [is_dupe if col_name in subset else True for col_name, is_dupe in zip(df.columns, keep_cols)]
 
     df = df.loc[:, keep_cols]
+    return df
+
+
+def drop_duplicate_rows(df, cols: list, keep='first'):
+    """
+    Removes duplicate rows based on 1 or more columns, keep first or last row
+    """
+    df = df.drop_duplicates(
+        subset=cols,
+        keep=keep).reset_index(drop=True)
     return df
 
 
@@ -300,4 +318,26 @@ def name_given1_extraction(df):
     Gets the text before the brackets of the column 'GivenName', ie. the Given1 name
     """
     df['Given1'] = df['GivenName'].apply(lambda name: name[:name.find("(")] if '(' in name else name)
+    return df
+
+
+def split_string_column(df, column: str, char: chr, new_name=None):
+    """
+    Splits a given string column based on a given character and puts splits in new column,
+    if multiple matching characters are in a cell, it will create that many extra columns
+    """
+    # Splits column rows into a new dataframe
+    splits = df[column].str.split(char, expand=True)
+    # gets the number of new columns. This is for naming purposes when adding back to original dataframe
+    splits_count = len(splits.columns)
+    # creates a list of column names based on the sequence of the split
+    col_names = []
+    if new_name is None:
+        new_name = f"{column}_split_"
+    for n in range(0, splits_count):
+        col_names.append(f"{new_name}{n}")
+    # renames the split columns to the new names
+    splits = replace_column_names(splits, col_names)
+    # adds the split columns to the end of the original dataframe
+    df = df.join(splits)
     return df
