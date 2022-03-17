@@ -290,9 +290,7 @@ def split_string_column(df, column: str, char: chr, new_column_name=None):
     # Splits column rows into a new dataframe
     splits = df[column].str.split(char, expand=True)
     # creates a list of column names based on the sequence of the split
-    col_names = []
-    for n, split in enumerate(splits.columns):
-        col_names.append(f"{new_column_name}{n}")
+    col_names = [f"{new_column_name}{i}" for i, _ in enumerate(splits.columns)]
     # renames the split columns to the new names
     splits = replace_column_names(splits, col_names)
     # adds the split columns to the end of the original dataframe
