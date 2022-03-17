@@ -279,6 +279,29 @@ def strip_every_str_column(df, exclude=None):
     return df
 
 
+def split_string_column(df, column: str, char: chr, new_column_name=None):
+    """
+    Splits a given string column based on a given character and puts splits in new column,
+    if multiple matching characters are in a cell, it will create that many extra columns
+    """
+    if new_column_name is None:
+        new_column_name = f"{column}_split_"
+
+    # Splits column rows into a new dataframe
+    splits = df[column].str.split(char, expand=True)
+    # gets the number of new columns. This is for naming purposes when adding back to original dataframe
+    splits_count = len(splits.columns)
+    # creates a list of column names based on the sequence of the split
+    col_names = []
+    for n in range(0, splits_count):
+        col_names.append(f"{new_column_name}{n}")
+    # renames the split columns to the new names
+    splits = replace_column_names(splits, col_names)
+    # adds the split columns to the end of the original dataframe
+    df = df.join(splits)
+    return df
+
+
 def max_between_columns(df, columns: Union[list, set], new_name='max'):
     """
     Adds a column to the df containing the max value for a row between 2 or more columns
@@ -331,26 +354,4 @@ def name_given1_extraction(df):
     Gets the text before the brackets of the column 'GivenName', ie. the Given1 name
     """
     df['Given1'] = df['GivenName'].apply(lambda name: name[:name.find("(")] if '(' in name else name)
-    return df
-
-
-def split_string_column(df, column: str, char: chr, new_name=None):
-    """
-    Splits a given string column based on a given character and puts splits in new column,
-    if multiple matching characters are in a cell, it will create that many extra columns
-    """
-    # Splits column rows into a new dataframe
-    splits = df[column].str.split(char, expand=True)
-    # gets the number of new columns. This is for naming purposes when adding back to original dataframe
-    splits_count = len(splits.columns)
-    # creates a list of column names based on the sequence of the split
-    col_names = []
-    if new_name is None:
-        new_name = f"{column}_split_"
-    for n in range(0, splits_count):
-        col_names.append(f"{new_name}{n}")
-    # renames the split columns to the new names
-    splits = replace_column_names(splits, col_names)
-    # adds the split columns to the end of the original dataframe
-    df = df.join(splits)
     return df
