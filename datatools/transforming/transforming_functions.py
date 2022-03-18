@@ -195,15 +195,24 @@ def headers_string_and_strip(df):
     return df
 
 
-def dedupe_column_names(df):
+def dedupe_column_names(df, keep_first=False):
     """
-    Adds a number to the end of duplicate column names based on their order of appearance in the data frame
+    If not keep_first, then adds a number to the end of duplicate column names based on their order of appearance
+    in the dataframe
     """
+    # TODO: Run a test on this
+    if keep_first:
+        # df.columns.duplicated(keep='first') returns false if a column is unique up to that point.
+        return df.loc[:, ~df.columns.duplicated(keep='first')]
+
     cols = pd.Series(df.columns)
-    for dup in df.columns[df.columns.duplicated(keep=False)]:
-        cols[df.columns.get_loc(dup)] = ([dup + '.' + str(d_idx)
-                                          for d_idx in range(df.columns.get_loc(dup).sum())]
-        )
+    for dup in df.columns[df.columns.duplicated(keep=False)]:  # Get's all duplicated columns
+        # TODO: I think this is doubling up on the duplicates, essentially redoing work.
+        #  Co-pilot was making solid suggestions
+        new_cols = []
+        for d_idx in range(df.columns.get_loc(dup).sum()):
+            new_cols.append(dup + '.' + str(d_idx))
+        cols[df.columns.get_loc(dup)] = new_cols
     df.columns = cols
     return df
 
