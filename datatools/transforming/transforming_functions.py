@@ -195,7 +195,7 @@ def headers_string_and_strip(df):
     return df
 
 
-def dudupe_column_names(df):
+def dedupe_column_names(df):
     """
     Adds a number to the end of duplicate column names based on their order of appearance in the data frame
     """
