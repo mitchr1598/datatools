@@ -1,6 +1,8 @@
+import itertools
+
 import pandas as pd
 from pandas.api.types import is_float
-from typing import Union
+from typing import Union, Iterable
 import datatools.utils as utils
 import warnings
 
@@ -72,12 +74,77 @@ def search_to_promote_multi(df, search_values_multiple: tuple[list, tuple, set],
     return df
 
 
+def find_headers_to_promote(df, search_values_multiple: Union[list[Iterable], tuple[Iterable]], check_header=False):
+    """
+    Promotes multiple rows to headers if they mat.
+    :param df: The dataframe to search
+
+    :param search_values_multiple: For a row to be promoted, it must contain at least one sub-element from every element
+    in search_values_multiple.
+
+    For example search_values_multiple = [('AA', 'aa', 'Aa', 'aA'), ('BB', 'bb', 'Bb', 'bB')]
+    will promote a row that contain one element with "double A" AND one element with "double B"
+    ['aA', 'cc'] will not be promoted because it does not contain any of the elements in the second
+        tuple of search_values_multiple
+    ['Bb', 'cc'] will not be promoted because it does not contain any of the elements in the first
+        tuple of search_values_multiple
+    ['aA', 'Bb'] will be promoted because it contains at least one element from each tuple
+
+    :param check_header:
+    :return:
+    """
+    # TODO: Deal with empty search
+    # TODO: Deal with multiple search values - at the moment it needs exact matches from all values
+    # TODO: Need to deal with incorrectly passed data in search_values_multiple
+    # TODO: This probably needs regex compatibility 🤮
+
+    # Identifies all rows that contain the search values, then creates the column headers
+    # from the rows that contain the search values
+    is_header_row = df.apply(lambda row: contains_multiple_of(row, search_values_multiple), axis='columns', raw=True)
+    rows_with_headers = df[is_header_row].values.tolist()
+    if check_header and contains_multiple_of(df.columns, search_values_multiple):
+        rows_with_headers.insert(0, list(df.columns))
+    # create a multi index out of the rows that contain the search values
+    # and the column headers
+    df.columns = pd.MultiIndex.from_tuples(list(zip(*rows_with_headers)))
+
+    all_headers = set(itertools.chain.from_iterable(search_values_multiple))  # One big set of all searching headers
+    df.columns = utils.misc.first_matching(df.columns, all_headers)  # Set the column headers to the first matching header
+    return df
+
+
+def contains_one_of(iterable, search_values: Iterable):  # TODO: Move to utils
+    """
+    Returns true if the iterable contains one of the search values
+    """
+    iterable = set(iterable)
+    return any([value in iterable for value in search_values])
+
+
+def contains_multiple_of(iterable, search_values_multiple: Union[list[Iterable], tuple[Iterable]]):  # TODO: Move to utils
+    """
+    Returns true if the series contains one value from each element in search_values_multiple
+    """
+    return all([contains_one_of(iterable, search_values) for search_values in search_values_multiple])
+
+
 def remove_n_column(df, n: int):
     """
     Removes column n from dataframe
     """
     # drops column by int index
     return df.drop(df.columns[n], axis=1)
+
+
+def remove_columns(df, columns: list[Union[str, int]]):
+    """
+    Removes columns from dataframe by either position or name (but not both)
+    """
+    existing_columns = set(df.columns)
+    if isinstance(columns[0], str):
+        return df.drop([col for col in columns if col in existing_columns], axis=1)
+    elif isinstance(columns[0], int):
+        return df.drop([df.columns[n] for n in columns], axis=1)
 
 
 def remove_float_columns(df, col_subset: Union[str, list[Union[int, str]]] = 'all',
@@ -131,14 +198,16 @@ def select_columns(df, columns: Union[list, set], on_error='raise'):
     :param on_error: What to do if a column is not found. Options are 'ignore', 'raise', 'warn'
     :return:
     """
+    if on_error not in {'ignore', 'raise', 'warn'}:
+        raise ValueError(f"on_error must be one of 'ignore', 'raise', 'warn'")
     if on_error == 'raise':
         for col in columns:
             if col not in df.columns:
-                raise ValueError('Column %s not found in dataframe' % col)
+                raise ValueError(f'Column {col} not found in dataframe with columns {list(df.columns)}')
     elif on_error == 'warn':
         for col in columns:
             if col not in df.columns:
-                warnings.warn('Column %s not found in dataframe' % col)
+                warnings.warn(f'Column {col} not found in dataframe with columns {list(df.columns)}')
     columns = [col for col in columns if col in df.columns]
     return df[columns]
 
@@ -360,3 +429,12 @@ def name_given1_extraction(df):
     """
     df['Given1'] = df['GivenName'].apply(lambda name: name[:name.find("(")] if '(' in name else name)
     return df
+
+
+def main():
+    df = pd.DataFrame([['y4', 'rs', 'st'], [1, 23, 6], ['st', 'straw', 'hgf'], ['stanine', 'RawScore', 'rsdfs'], ['stanine', 'rs', 'rsdfs']])
+    print(find_headers_to_promote(df, [{'st', 'stanine'}, {'rs', 'RawScore'}]))
+
+
+if __name__ == '__main__':
+    main()
