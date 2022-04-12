@@ -98,17 +98,18 @@ def find_headers_to_promote(df, search_values_multiple: Union[list[Iterable], tu
     # TODO: Need to deal with incorrectly passed data in search_values_multiple
     # TODO: This probably needs regex compatibility 🤮
 
+    all_headers = set(itertools.chain.from_iterable(search_values_multiple))  # One big set of all searching headers
+
     # Identifies all rows that contain the search values, then creates the column headers
     # from the rows that contain the search values
-    is_header_row = df.apply(lambda row: contains_multiple_of(row, search_values_multiple), axis='columns', raw=True)
+    is_header_row = df.apply(lambda row: contains_one_of(row, all_headers), axis='columns', raw=True)
     rows_with_headers = df[is_header_row].values.tolist()
-    if check_header and contains_multiple_of(df.columns, search_values_multiple):
+    if check_header and contains_one_of(df.columns, all_headers):
         rows_with_headers.insert(0, list(df.columns))
     # create a multi index out of the rows that contain the search values
     # and the column headers
     df.columns = pd.MultiIndex.from_tuples(list(zip(*rows_with_headers)))
 
-    all_headers = set(itertools.chain.from_iterable(search_values_multiple))  # One big set of all searching headers
     df.columns = utils.misc.first_matching(df.columns, all_headers)  # Set the column headers to the first matching header
     return df
 
