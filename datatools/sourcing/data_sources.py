@@ -8,12 +8,13 @@ from datatools import transforming
 from typing import Union
 
 
+# TODO: Probably need to add data types, as tabular data behaves very differently to nested data such as json
+
+
 class DataSource(ABC):
     """
     Abstract class for importing, transforming, and exporting data from and too various sources processes.
     """
-    def __init__(self):
-
 
     @abstractmethod
     def import_data(self, *args, **kwargs) -> pd.DataFrame:
@@ -132,11 +133,9 @@ class APISource(DataSource):
         self._update_response_inputs(link_extension, params, headers)
         response = self._get_response()
 
-        self.json_data_source.import_data(data=response.text,
-                                          column_selection=column_selection,
-                                          multi_row_data=multi_row_data)
-
-        return self.json_data_source.imported_data
+        return self.json_data_source.import_data(data=response.text,
+                                                 column_selection=column_selection,
+                                                 multi_row_data=multi_row_data)
 
 
 class CsvSource(DataSource):
@@ -169,6 +168,8 @@ class DatabaseSource(DataSource):
 
 
 class MultiSource:  # Maybe this should be a datasource with a concatenation function passed at initialization?
+    # TODO: Definately need to reconsider this now that I've redisigned DataSource
+    #  Surely just a series of DataSources, appending as each datasource is imported?
     def __init__(self):
         self.data_sources = {}
 
