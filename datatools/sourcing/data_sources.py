@@ -12,40 +12,20 @@ class DataSource(ABC):
     """
     Abstract class for importing, transforming, and exporting data from and too various sources processes.
     """
-    def __init__(self, transformer: transforming.transformers.Transformer = None,
-                 uploader: uploading.uploaders.Uploader = None, auto_import: bool = True):
-        self.imported_data = None
-        self.transformed_data: pd.DataFrame = pd.DataFrame()
-        self.exported_data: pd.DataFrame = pd.DataFrame()
-        self.failed_exports: pd.DataFrame = pd.DataFrame()
-        if transformer is None:
-            self.transformer = transforming.transformers.Transformer()
-        self.uploader = uploader
+    def __init__(self):
+
 
     @abstractmethod
-    def import_data(self, *args, **kwargs) -> None:
+    def import_data(self, *args, **kwargs) -> pd.DataFrame:
         pass
-
-    def transform_data(self, transformer: transforming.transformers.Transformer = None, *args, **kwargs) -> None:
-        if transformer is not None:
-            self.transformer = transformer
-        self.transformed_data = self.transformer.transform(self.imported_data)
-
-    def export_data(self, uploader: uploading.uploaders.Uploader = None, *args, **kwargs) -> pd.DataFrame:
-        if self.transformed_data.empty:
-            self.transform_data()
-        if uploader is not None:
-            uploader.upload_data(self.transformed_data)
-        self.exported_data, self.failed_exports = uploader.get_successful_uploads(), uploader.get_failed_uploads()
-        return self.exported_data
 
 
 class DataframeSource(DataSource):
     def __init__(self):
         super().__init__()
 
-    def import_data(self, df) -> None:
-        self.imported_data = df
+    def import_data(self, df) -> pd.DataFrame:
+        return df
 
 
 class JsonSource(DataSource):
@@ -56,7 +36,7 @@ class JsonSource(DataSource):
         self.multi_row_data = multi_row_data
 
     def import_data(self, data: Union[str, list] = None, column_selection: list[str] = None, multi_row_data=None,
-                    *args, **kwargs) -> None:
+                    *args, **kwargs) -> pd.DataFrame:
         # Provided at initialization or as a parameter
         if column_selection is not None:
             self.column_selection = column_selection
@@ -78,7 +58,7 @@ class JsonSource(DataSource):
         else:
             raise DataImportError('import_data() requires either a file path given at initialization'
                                   ' or data passed into the method.')
-        self.imported_data = utils.json_utils.expand_and_normalize(json_data, self.column_selection, self.multi_row_data)
+        return utils.json_utils.expand_and_normalize(json_data, self.column_selection, self.multi_row_data)
 
 
 class APISource(DataSource):
@@ -138,7 +118,7 @@ class APISource(DataSource):
         return requests.get(self.link, params=self.params, headers=self.headers)
 
     def import_data(self, link_extension: str = '', column_selection=None, multi_row_data=None, params=None,
-                    headers=None) -> None:
+                    headers=None) -> pd.DataFrame:
         """
         :param link_extension: The link extension to be added to the link.
         :param column_selection: The keys of the JSON data to be used.
@@ -156,7 +136,7 @@ class APISource(DataSource):
                                           column_selection=column_selection,
                                           multi_row_data=multi_row_data)
 
-        self.imported_data = self.json_data_source.imported_data
+        return self.json_data_source.imported_data
 
 
 class CsvSource(DataSource):
@@ -164,8 +144,8 @@ class CsvSource(DataSource):
         super().__init__()
         self.path = path
 
-    def import_data(self, *args, **kwargs) -> None:
-        self.imported_data = pd.read_csv(self.path, *args, **kwargs)
+    def import_data(self, *args, **kwargs) -> pd.DataFrame:
+        return pd.read_csv(self.path, *args, **kwargs)
 
 
 class ExcelSource(DataSource):
@@ -173,8 +153,8 @@ class ExcelSource(DataSource):
         super().__init__()
         self.path = path
 
-    def import_data(self, *args, **kwargs) -> None:
-        self.imported_data = pd.read_excel(self.path, *args, **kwargs)
+    def import_data(self, *args, **kwargs) -> pd.DataFrame:
+        return pd.read_excel(self.path, *args, **kwargs)
 
 
 class DatabaseSource(DataSource):
@@ -183,9 +163,9 @@ class DatabaseSource(DataSource):
         self.engine = engine
         self.query = query
 
-    def import_data(self, query='', *args, **kwargs) -> None:
+    def import_data(self, query='', *args, **kwargs) -> pd.DataFrame:
         self.query += query
-        self.imported_data = pd.read_sql(self.query, self.engine, *args, **kwargs)
+        return pd.read_sql(self.query, self.engine, *args, **kwargs)
 
 
 class MultiSource:  # Maybe this should be a datasource with a concatenation function passed at initialization?
