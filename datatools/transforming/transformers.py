@@ -4,6 +4,9 @@ import pandas as pd
 import functools
 
 
+__all__ = ['Transformer', 'PipelineStep']
+
+
 class PipelineStep:
     """
     A pipeline step is a function that takes only a dataframe returns only a dataframe. Additional arguments can be

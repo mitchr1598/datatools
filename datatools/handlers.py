@@ -1,6 +1,9 @@
-import sourcing
-import transforming
-import uploading
+from __future__ import annotations  # This makes type hints considered as strings to avoid import loops
+
+
+from . import sourcing
+from . import transforming
+from . import uploading
 
 import pandas as pd
 

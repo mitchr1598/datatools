@@ -2,10 +2,11 @@ import pandas as pd
 from abc import ABC, abstractmethod
 import requests
 import json
-from datatools import utils
-from datatools import uploading
-from datatools import transforming
+import datatools
 from typing import Union
+
+
+__all__ = ['DataSource', 'DataframeSource', 'JsonSource', 'APISource', 'CsvSource', 'ExcelSource', 'DatabaseSource', 'ExcelSource']
 
 
 # TODO: Probably need to add data types, as tabular data behaves very differently to nested data such as json
@@ -59,7 +60,7 @@ class JsonSource(DataSource):
         else:
             raise DataImportError('import_data() requires either a file path given at initialization'
                                   ' or data passed into the method.')
-        return utils.json_utils.expand_and_normalize(json_data, self.column_selection, self.multi_row_data)
+        return datatools.utils.json_utils.expand_and_normalize(json_data, self.column_selection, self.multi_row_data)
 
 
 class APISource(DataSource):
