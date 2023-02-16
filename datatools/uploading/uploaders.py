@@ -21,6 +21,14 @@ class Uploader(ABC):
         pass
 
 
+class DfUploader(Uploader):
+    def __init__(self):
+        super().__init__()
+
+    def upload_data(self, df) -> None:
+        self._successful_uploads = pd.concat([self._successful_uploads, df], ignore_index=True)
+
+
 class DBUploader(Uploader):
     def __init__(self, db_connection, table_name, if_exists='append'):
         # Specifying table_name etc. here to adhere to Liskov Substitution Principle on the use of upload_data method
