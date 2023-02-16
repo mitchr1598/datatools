@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 
-__all__ = ['Uploader', 'DBUploader', 'CSVUploader']
+__all__ = ['Uploader', 'DBUploader', 'CSVUploader', 'DfUploader']
 
 
 class Uploader(ABC):

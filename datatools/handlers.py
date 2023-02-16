@@ -37,8 +37,9 @@ class DataHandler:
         if self.transformed_data.empty:
             self.transform_data()
         if uploader is not None:
-            uploader.upload_data(self.transformed_data)
-        self.exported_data, self.failed_exports = uploader.get_successful_uploads(), uploader.get_failed_uploads()
+            self.uploader = uploader
+        self.uploader.upload_data(self.transformed_data)
+        self.exported_data, self.failed_exports = self.uploader.get_successful_uploads(), self.uploader.get_failed_uploads()
         return self.exported_data
 
 
